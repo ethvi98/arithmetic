@@ -1,0 +1,119 @@
+package com.ethvi.arithmetic.LRU;
+
+/**
+ * @Author ethvi
+ * @Description:  使用HashMap实现，效率低
+ * @Date: 2019/9/27 16:25
+ */
+
+import java.util.Map;
+import java.util.HashMap;
+class LRUCache1 {
+
+    private Map<Integer, Integer> map;
+    //头结点
+    private Node node;
+
+    //尾结点
+    private Node last;
+
+    //上限
+    private int threshold;
+
+    public LRUCache1(int capacity) {
+        threshold = capacity;
+        map = new HashMap<>(capacity);
+        node = new Node(0, null);
+        last = new Node(1, null);
+        last.pre = node;
+        node.next = last;
+    }
+
+    public int get(int key) {
+        Integer result = map.get(key);
+        if (result == null)
+            return -1;
+        delete(key);
+        adjust(key);
+        return result;
+    }
+
+    public void put(int key, int value) {
+        if (map.size() >= threshold && map.get(key) == null) {
+            //删除尾节点前一个
+            Node temp = last.pre;
+            int v = temp.val;
+            temp.pre.next = temp.next;
+            temp.next.pre = temp.pre;
+            map.remove(v);
+        }
+        if (map.get(key) != null)
+            delete(key);
+        map.put(key, value);
+        //将node插入链表最前端
+        adjust(key);
+    }
+
+    //将值为key的节点插入第一个个位置
+    private void adjust(int key) {
+        Node t = new Node(key);
+        t.next = node.next;
+        node.next.pre = t;
+        node.next = t;
+        t.pre = node;
+    }
+
+    //删除链表中值为ｋｅｙ的节点
+    private void delete(int key) {
+        Node temp = node.next;
+        while (temp != null) {
+            if (temp.val == key) {
+                //删除节点
+                temp.pre.next = temp.next;
+                temp.next.pre = temp.pre;
+                break;
+            }
+            //继续向前找
+            temp = temp.next;
+        }
+    }
+}
+
+//双向链表
+class Node {
+    int val;
+    Node pre;
+    Node next;
+
+    public Node(int val, Node pre) {
+        this.val = val;
+        this.pre = pre;
+    }
+
+    public Node(int val) {
+        this.val = val;
+    }
+}
+
+class Main {
+    public static void main(String[] args) {
+        LRUCache1 cache = new LRUCache1(2);
+        System.out.println(cache.get(2));      //返回-1
+        cache.put(1, 1);
+        cache.put(2, 6);
+        System.out.println(cache.get(1));       // 返回  1
+        cache.put(1, 5);    // 该操作会使得密钥 2 作废
+        cache.put(1, 2);    // 该操作会使得密钥 1 作废
+        System.out.println(cache.get(1));       // 返回 2
+        System.out.println(cache.get(2));       // 返回 6
+//        cache.put(1, 1);
+//        cache.put(2, 2);
+//        System.out.println(cache.get(1));       // 返回  1
+//        cache.put(3, 3);    // 该操作会使得密钥 2 作废
+//        System.out.println(cache.get(2));       // 返回 -1 (未找到)
+//        cache.put(4, 4);    // 该操作会使得密钥 1 作废
+//        System.out.println(cache.get(1));       // 返回 -1 (未找到)
+//        System.out.println(cache.get(3));       // 返回  3
+//        System.out.println(cache.get(4));       // 返回  4
+    }
+}
